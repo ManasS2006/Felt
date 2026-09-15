@@ -1,0 +1,173 @@
+<title>Felt — Poker Solver</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;0,700;1,500&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#F3F5EF; --surface:#FBFCF9; --sunk:#EEF1EA;
+    --ink:#17211B; --muted:#586458; --faint:#8A968C; --line:#D6DCD1;
+    --felt:#1C6B47; --felt-soft:#E3EEE7; --felt-line:#B9D6C6;
+    --clay:#A8492B; --chip:#976e18;
+    --serif:"Spectral",Georgia,serif;
+    --sans:"Public Sans",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E130F; --surface:#151B16; --sunk:#10160F;
+      --ink:#E7ECE4; --muted:#9DA99E; --faint:#6E7A70; --line:#27302A;
+      --felt:#4CA97D; --felt-soft:#16271E; --felt-line:#265138;
+      --clay:#DA7E5B; --chip:#D6AB56;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E130F; --surface:#151B16; --sunk:#10160F;
+    --ink:#E7ECE4; --muted:#9DA99E; --faint:#6E7A70; --line:#27302A;
+    --felt:#4CA97D; --felt-soft:#16271E; --felt-line:#265138;
+    --clay:#DA7E5B; --chip:#D6AB56;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--sans);
+    line-height:1.5; -webkit-font-smoothing:antialiased; margin:0; padding:40px 20px 56px;
+  }
+  .card{
+    max-width:720px; margin:0 auto; background:var(--surface);
+    border:1px solid var(--line); border-radius:18px; overflow:hidden;
+  }
+
+  /* hero */
+  .hero{
+    padding:34px 34px 26px; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,var(--felt-soft),transparent);
+    display:flex; flex-direction:column; gap:12px;
+  }
+  .eyebrow{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--felt); margin:0;
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  }
+  .eyebrow .dot{color:var(--faint)}
+  h1{
+    font-family:var(--serif); font-weight:700; font-size:clamp(3rem,11vw,4.6rem);
+    line-height:.92; letter-spacing:-.02em; margin:0; color:var(--felt);
+  }
+  .tag{
+    font-family:var(--serif); font-size:clamp(1.05rem,2.6vw,1.32rem);
+    color:var(--ink); margin:0; max-width:52ch; text-wrap:pretty;
+  }
+
+  .body{padding:8px 34px 30px; display:flex; flex-direction:column}
+  section{padding:22px 0; border-bottom:1px solid var(--line)}
+  section:last-child{border-bottom:0; padding-bottom:6px}
+  h2{
+    font-family:var(--mono); font-size:.7rem; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--faint); margin:0 0 14px;
+  }
+
+  /* stack chips */
+  .chips{display:flex; flex-wrap:wrap; gap:8px}
+  .chips span{
+    font-family:var(--mono); font-size:.8rem; color:var(--ink);
+    background:var(--sunk); border:1px solid var(--line);
+    border-radius:8px; padding:5px 11px;
+  }
+  .chips span.hot{color:var(--felt); border-color:var(--felt-line); background:var(--felt-soft)}
+  .chips span.dim{color:var(--faint)}
+
+  /* bullets */
+  ul{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:12px}
+  li{display:flex; gap:12px; font-size:.98rem; color:var(--ink); align-items:baseline}
+  li::before{
+    content:"♠"; color:var(--felt); font-size:.8rem; flex:none; transform:translateY(-1px);
+  }
+  li b{font-weight:600}
+  li .q{color:var(--muted)}
+
+  /* stat tiles */
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
+  .stat{
+    background:var(--sunk); border:1px solid var(--line); border-radius:11px;
+    padding:14px 15px; display:flex; flex-direction:column; gap:3px;
+  }
+  .stat .n{
+    font-family:var(--serif); font-weight:700; font-size:1.7rem; line-height:1;
+    color:var(--ink); font-variant-numeric:tabular-nums;
+  }
+  .stat .n small{font-size:.9rem; font-weight:600; color:var(--muted)}
+  .stat .l{font-size:.78rem; color:var(--muted); line-height:1.3}
+  .stat.hero-stat{background:var(--felt-soft); border-color:var(--felt-line)}
+  .stat.hero-stat .n{color:var(--felt)}
+  @media(max-width:560px){.stats{grid-template-columns:repeat(2,1fr)}}
+
+  .foot{
+    font-family:var(--mono); font-size:.74rem; color:var(--faint);
+    text-align:center; padding:18px 20px 22px;
+  }
+  .confirm{color:var(--clay); font-style:italic; font-family:var(--serif)}
+</style>
+
+<div class="card">
+  <div class="hero">
+    <p class="eyebrow"><span>Poker solver</span><span class="dot">·</span><span>heads-up no-limit</span><span class="dot">·</span><span>Summer 2026</span></p>
+    <h1>Felt</h1>
+    <p class="tag">A heads-up no-limit hold'em solver that re-solves every spot live — DeepStack-style intuition, running on a laptop instead of a supercomputer.</p>
+  </div>
+
+  <div class="body">
+    <section>
+      <h2>Built with</h2>
+      <div class="chips">
+        <span class="hot">C++</span>
+        <span class="hot">LibTorch / ATen</span>
+        <span>CUDA</span>
+        <span>portable fp32</span>
+        <span>feedforward value nets</span>
+        <span>CFR-D</span>
+        <span class="dim">Python &amp; Go (earlier prototypes)</span>
+      </div>
+    </section>
+
+    <section>
+      <h2>What it does</h2>
+      <ul>
+        <li><span><b>Re-solves each spot live</b> instead of storing a blueprint — a river value net trained on solved river spots, then <b>bootstrapped up into a turn net</b> (DeepStack-style data generation).</span></li>
+        <li><span><b>Depth-limited continual re-solving (CFR-D)</b> — the search only looks a few streets ahead; past the depth limit the value net stands in for solving to the end.</span></li>
+        <li><span>Ported the engine from <b>CUDA to platform-agnostic C++/LibTorch</b>, so the same solver runs with or without a dedicated GPU.</span></li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Performance — BTN vs BB flop solve · 200bb</h2>
+      <div class="stats">
+        <div class="stat hero-stat">
+          <span class="n">95.9<small>s</small></span>
+          <span class="l">flop solve on an M4 MacBook Air</span>
+        </div>
+        <div class="stat">
+          <span class="n">20–30<small>s</small></span>
+          <span class="l">same solve on a desktop GPU</span>
+        </div>
+        <div class="stat">
+          <span class="n">3,138</span>
+          <span class="l">trunk nodes · 600 iterations</span>
+        </div>
+        <div class="stat">
+          <span class="n">200<small>bb</small></span>
+          <span class="l">effective stacks</span>
+        </div>
+        <div class="stat">
+          <span class="n">~540 / 554</span>
+          <span class="l">OOP / IP range combos</span>
+        </div>
+        <div class="stat">
+          <span class="n">0<small> abstraction</small></span>
+          <span class="l">solves the real spot — no blueprint</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <p class="foot">built summer 2026 · the payoff of ~2 years chipping away at CFR</p>
+</div>

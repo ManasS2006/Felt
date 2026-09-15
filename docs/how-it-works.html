@@ -1,0 +1,328 @@
+<title>How Felt Thinks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;0,700;1,500&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#F3F5EF; --surface:#FBFCF9; --sunk:#EEF1EA;
+    --ink:#17211B; --muted:#586458; --faint:#8A968C; --line:#D6DCD1;
+    --felt:#1C6B47; --felt-soft:#E3EEE7; --felt-line:#B9D6C6;
+    --clay:#A8492B; --clay-soft:#F0E3DC; --clay-line:#E0C3B5;
+    --chip:#976e18;
+    --serif:"Spectral",Georgia,serif;
+    --sans:"Public Sans",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E130F; --surface:#151B16; --sunk:#10160F;
+      --ink:#E7ECE4; --muted:#9DA99E; --faint:#6E7A70; --line:#27302A;
+      --felt:#4CA97D; --felt-soft:#16271E; --felt-line:#265138;
+      --clay:#DA7E5B; --clay-soft:#2A1C17; --clay-line:#4A3025;
+      --chip:#D6AB56;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E130F; --surface:#151B16; --sunk:#10160F;
+    --ink:#E7ECE4; --muted:#9DA99E; --faint:#6E7A70; --line:#27302A;
+    --felt:#4CA97D; --felt-soft:#16271E; --felt-line:#265138;
+    --clay:#DA7E5B; --clay-soft:#2A1C17; --clay-line:#4A3025;
+    --chip:#D6AB56;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.5;
+    -webkit-font-smoothing:antialiased; margin:0; padding:32px 20px 56px;
+  }
+  .page{max-width:920px; margin:0 auto; display:flex; flex-direction:column; gap:34px}
+
+  header{display:flex; flex-direction:column; gap:14px}
+  .eyebrow{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--felt); margin:0;
+  }
+  h1{
+    font-family:var(--serif); font-weight:700; font-size:clamp(2rem,5.4vw,3rem);
+    line-height:1.04; letter-spacing:-.01em; text-wrap:balance; margin:0;
+  }
+  h1 em{font-style:italic; font-weight:500; color:var(--felt)}
+  .thesis{
+    font-family:var(--serif); font-size:clamp(1.02rem,2.3vw,1.2rem);
+    color:var(--muted); max-width:66ch; margin:0; text-wrap:pretty;
+  }
+  .thesis b{color:var(--ink); font-weight:600}
+  .flow{
+    display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:4px;
+    font-family:var(--mono); font-size:.76rem; color:var(--muted);
+  }
+  .flow b{color:var(--felt); font-weight:500}
+  .flow .arw{color:var(--faint)}
+
+  .act{display:flex; flex-direction:column; gap:16px}
+  .act-head{display:flex; align-items:baseline; gap:14px; flex-wrap:wrap}
+  .act-num{
+    font-family:var(--mono); font-size:.74rem; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--felt);
+    border:1px solid var(--felt-line); background:var(--felt-soft);
+    border-radius:999px; padding:3px 11px;
+  }
+  .act-head h2{
+    font-family:var(--serif); font-weight:600; font-size:clamp(1.3rem,3vw,1.7rem);
+    margin:0; letter-spacing:-.01em;
+  }
+  .act-head .sub{font-size:.9rem; color:var(--muted); font-family:var(--sans)}
+
+  .board{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:20px 18px 12px;
+  }
+  .board svg{display:block; width:100%; height:auto}
+  figure{margin:0}
+  figcaption{
+    font-size:.9rem; color:var(--muted); margin-top:12px;
+    font-style:italic; font-family:var(--serif); max-width:74ch;
+  }
+  figcaption b{color:var(--ink); font-weight:600; font-style:normal}
+
+  .engine{
+    background:var(--sunk); border:1px solid var(--line); border-radius:12px;
+    padding:18px 20px; display:flex; flex-direction:column; gap:8px;
+  }
+  .engine .k{
+    font-family:var(--mono); font-size:.68rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--faint);
+  }
+  .engine p{margin:0; font-size:.97rem; color:var(--muted)}
+  .engine b{color:var(--ink); font-weight:600}
+
+  hr.rule{height:1px; background:var(--line); border:0; margin:0}
+  footer{
+    font-size:.8rem; color:var(--faint); text-align:center;
+    font-family:var(--mono); letter-spacing:.03em;
+  }
+</style>
+
+<div class="page">
+
+  <header>
+    <p class="eyebrow">Felt · how the poker bot works</p>
+    <h1>First it studies, then it <em>plays</em></h1>
+    <p class="thesis">There are two parts. <b>Before</b> any real game, Felt studies millions of pretend hands until it can guess how good any poker spot is. <b>While it plays</b>, it stops and works out the best move for the exact spot it's in — and when looking too far ahead gets too hard, it just uses its good guess instead.</p>
+    <div class="flow">
+      <span>pretend hands</span><span class="arw">→</span><span>work them out</span><span class="arw">→</span><b>good guesses</b><span class="arw">⇒</span><span>quick planning</span><span class="arw">→</span><span>what to do</span>
+    </div>
+  </header>
+
+  <hr class="rule">
+
+  <!-- ============ ACT I : STUDY ============ -->
+  <section class="act">
+    <div class="act-head">
+      <span class="act-num">Before the game</span>
+      <h2>Step 1 — Learn to guess</h2>
+      <span class="sub">learn the last card first, then the card before it</span>
+    </div>
+
+    <figure>
+      <div class="board">
+        <svg viewBox="0 0 880 340" role="img" aria-label="Two learning steps. First, pretend hands where only the last card is left are worked out all the way to the end, which teaches a last-card helper to guess how good a spot is. Then, pretend hands one card earlier are worked out using that last-card helper at the far end, which teaches an earlier-card helper. An arrow shows the last-card helper being reused to help with the earlier card.">
+          <defs>
+            <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+            <marker id="a1f" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--felt)"/></marker>
+          </defs>
+
+          <!-- RIVER rung -->
+          <text x="20" y="34" font-family="JetBrains Mono, monospace" font-size="11.5" letter-spacing="0.06em" fill="var(--clay)">① START — THE LAST CARD</text>
+          <g font-family="Public Sans, sans-serif">
+            <rect x="20" y="46" width="230" height="60" rx="9" fill="var(--sunk)" stroke="var(--line)"/>
+            <text x="135" y="72" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">A pretend hand</text>
+            <text x="135" y="90" text-anchor="middle" font-size="11" fill="var(--muted)">money · cards · both players</text>
+
+            <line x1="250" y1="76" x2="300" y2="76" stroke="currentColor" stroke-width="1.5" marker-end="url(#a1)"/>
+
+            <rect x="300" y="46" width="270" height="60" rx="9" fill="var(--surface)" stroke="var(--line)"/>
+            <text x="435" y="70" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">Work it out all the way</text>
+            <text x="435" y="90" text-anchor="middle" font-size="11" fill="var(--clay)">ends when the cards are shown</text>
+
+            <line x1="570" y1="76" x2="628" y2="76" stroke="currentColor" stroke-width="1.5" marker-end="url(#a1)"/>
+            <text x="599" y="68" text-anchor="middle" font-size="9.5" fill="var(--faint)">answers</text>
+
+            <rect x="630" y="46" width="230" height="60" rx="9" fill="var(--felt-soft)" stroke="var(--felt-line)"/>
+            <text x="745" y="72" text-anchor="middle" font-size="14" font-weight="700" fill="var(--felt)">Last-card helper</text>
+            <text x="745" y="90" text-anchor="middle" font-size="11" fill="var(--muted)">learns to guess</text>
+          </g>
+
+          <!-- bootstrap connector -->
+          <polyline points="745,106 745,150 435,150 435,196" fill="none" stroke="var(--felt)" stroke-width="2" marker-end="url(#a1f)"/>
+          <rect x="452" y="140" width="286" height="20" rx="10" fill="var(--bg)"/>
+          <text x="595" y="154" text-anchor="middle" font-size="11" fill="var(--felt)">now it helps with the earlier card</text>
+
+          <!-- TURN rung -->
+          <text x="20" y="188" font-family="JetBrains Mono, monospace" font-size="11.5" letter-spacing="0.06em" fill="var(--clay)">② NEXT — ONE CARD EARLIER</text>
+          <g font-family="Public Sans, sans-serif">
+            <rect x="20" y="198" width="230" height="60" rx="9" fill="var(--sunk)" stroke="var(--line)"/>
+            <text x="135" y="224" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">A pretend hand</text>
+            <text x="135" y="242" text-anchor="middle" font-size="11" fill="var(--muted)">one card earlier</text>
+
+            <line x1="250" y1="228" x2="300" y2="228" stroke="currentColor" stroke-width="1.5" marker-end="url(#a1)"/>
+
+            <rect x="300" y="198" width="270" height="60" rx="9" fill="var(--surface)" stroke="var(--felt-line)" stroke-width="1.5"/>
+            <text x="435" y="222" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">Work it out</text>
+            <text x="435" y="242" text-anchor="middle" font-size="11" fill="var(--felt)">uses the last-card helper</text>
+
+            <line x1="570" y1="228" x2="628" y2="228" stroke="currentColor" stroke-width="1.5" marker-end="url(#a1)"/>
+            <text x="599" y="220" text-anchor="middle" font-size="9.5" fill="var(--faint)">answers</text>
+
+            <rect x="630" y="198" width="230" height="60" rx="9" fill="var(--felt-soft)" stroke="var(--felt-line)"/>
+            <text x="745" y="224" text-anchor="middle" font-size="14" font-weight="700" fill="var(--felt)">Earlier-card helper</text>
+            <text x="745" y="242" text-anchor="middle" font-size="11" fill="var(--muted)">learns to guess</text>
+          </g>
+
+          <text x="440" y="300" text-anchor="middle" font-size="11.5" fill="var(--faint)">each helper studies millions of hands · you can keep going back one card at a time</text>
+        </svg>
+      </div>
+      <figcaption>The clever part is doing it backwards. The <b>last card</b> is easy to work out all the way, because the hand just ends — so that helper learns from real answers. The card <b>before</b> it is too hard to finish, so the bot stops at the last card and asks the first helper. Each helper you build helps teach the next one.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ VALUE NET ============ -->
+  <section class="act">
+    <div class="act-head">
+      <span class="act-num">The helper, up close</span>
+      <h2>What the helper does</h2>
+      <span class="sub">what you give it, and what it tells you back</span>
+    </div>
+
+    <figure>
+      <div class="board">
+        <svg viewBox="0 0 880 230" role="img" aria-label="The helper takes four things — the money in the pot, the cards on the table, the hands we might have, and the hands the other player might have — into a small brain that gives back how good each of our hands is and each of their hands is. Those worth-values are multiplied by the chance the other player really has that hand to get the final answer.">
+          <defs>
+            <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+            <marker id="a2f" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--felt)"/></marker>
+          </defs>
+          <g font-family="Public Sans, sans-serif">
+            <text x="90" y="28" text-anchor="middle" font-size="10.5" letter-spacing="0.06em" fill="var(--faint)" font-family="JetBrains Mono, monospace">YOU GIVE IT</text>
+            <rect x="16" y="40" width="148" height="30" rx="7" fill="var(--sunk)" stroke="var(--line)"/><text x="90" y="60" text-anchor="middle" font-size="12" fill="var(--ink)">money in the pot</text>
+            <rect x="16" y="78" width="148" height="30" rx="7" fill="var(--sunk)" stroke="var(--line)"/><text x="90" y="98" text-anchor="middle" font-size="12" fill="var(--ink)">cards on the table</text>
+            <rect x="16" y="116" width="148" height="30" rx="7" fill="var(--sunk)" stroke="var(--line)"/><text x="90" y="136" text-anchor="middle" font-size="12" fill="var(--ink)">hands we might have</text>
+            <rect x="16" y="154" width="148" height="30" rx="7" fill="var(--sunk)" stroke="var(--line)"/><text x="90" y="174" text-anchor="middle" font-size="12" fill="var(--ink)">hands they might have</text>
+
+            <line x1="164" y1="55" x2="290" y2="100" stroke="currentColor" stroke-width="1.3" marker-end="url(#a2)"/>
+            <line x1="164" y1="93" x2="290" y2="106" stroke="currentColor" stroke-width="1.3" marker-end="url(#a2)"/>
+            <line x1="164" y1="131" x2="290" y2="118" stroke="currentColor" stroke-width="1.3" marker-end="url(#a2)"/>
+            <line x1="164" y1="169" x2="290" y2="124" stroke="currentColor" stroke-width="1.3" marker-end="url(#a2)"/>
+
+            <rect x="292" y="66" width="196" height="92" rx="10" fill="var(--felt-soft)" stroke="var(--felt-line)" stroke-width="1.5"/>
+            <text x="390" y="100" text-anchor="middle" font-size="15" font-weight="700" fill="var(--felt)">The helper</text>
+            <text x="390" y="122" text-anchor="middle" font-size="11.5" fill="var(--muted)">a small brain</text>
+            <text x="390" y="139" text-anchor="middle" font-size="11" fill="var(--muted)">that has studied a lot</text>
+
+            <line x1="488" y1="112" x2="548" y2="112" stroke="var(--felt)" stroke-width="1.6" marker-end="url(#a2f)"/>
+            <text x="518" y="104" text-anchor="middle" font-size="9.5" fill="var(--faint)">worth</text>
+
+            <rect x="550" y="80" width="150" height="30" rx="7" fill="var(--surface)" stroke="var(--felt-line)"/><text x="625" y="100" text-anchor="middle" font-size="12" fill="var(--ink)">our hands' worth</text>
+            <rect x="550" y="116" width="150" height="30" rx="7" fill="var(--surface)" stroke="var(--felt-line)"/><text x="625" y="136" text-anchor="middle" font-size="12" fill="var(--ink)">their hands' worth</text>
+
+            <line x1="700" y1="112" x2="754" y2="112" stroke="var(--felt)" stroke-width="1.6" marker-end="url(#a2f)"/>
+            <text x="727" y="104" text-anchor="middle" font-size="9.5" fill="var(--clay)">× chance</text>
+
+            <rect x="756" y="80" width="104" height="66" rx="9" fill="var(--felt)"/>
+            <text x="808" y="108" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">answer</text>
+            <text x="808" y="126" text-anchor="middle" font-size="10" fill="#dff0e6">each hand</text>
+
+            <text x="440" y="210" text-anchor="middle" font-size="12" fill="var(--muted)" font-family="Spectral, serif" font-style="italic">Guess the tricky part with the brain, then do the easy math by hand — a smaller, faster, more-right helper.</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption>What you give the helper is really just a picture of a poker spot — the money, the cards, and what each player might be holding. What it gives back is a <b>gut feeling</b>: how good every hand would be right there. Guessing the smooth part and doing the easy math yourself makes the helper smaller, faster, and more accurate.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ ACT II : PLAY ============ -->
+  <section class="act">
+    <div class="act-head">
+      <span class="act-num">During the game</span>
+      <h2>Step 2 — Work out the move</h2>
+      <span class="sub">plan just a little ahead, and let the helper handle the rest</span>
+    </div>
+
+    <figure>
+      <div class="board">
+        <svg viewBox="0 0 880 470" role="img" aria-label="Playing a real spot. The bot starts from the spot in front of it, remembering our hands and how the other player's hands are doing. It makes a small map of what could happen next, looking only a few steps ahead. Then it practices 600 times: go through the map, ask the helper at the far end, use a fair rule that lets the other player quit so it can't be tricked, and learn to pick better moves. After 600 rounds it has a plan: for each hand, check, bet, or raise.">
+          <defs>
+            <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+            <marker id="a3f" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--felt)"/></marker>
+          </defs>
+          <g font-family="Public Sans, sans-serif">
+            <rect x="220" y="12" width="440" height="56" rx="10" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+            <text x="440" y="34" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">Right now — the cards are Kd 7c 2s</text>
+            <text x="440" y="53" text-anchor="middle" font-size="11.5" fill="var(--muted)">remember: our hands + how theirs are doing</text>
+            <line x1="440" y1="68" x2="440" y2="88" stroke="currentColor" stroke-width="1.5" marker-end="url(#a3)"/>
+
+            <rect x="170" y="90" width="540" height="52" rx="10" fill="var(--sunk)" stroke="var(--line)"/>
+            <text x="440" y="112" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">Make a small map of what could happen next</text>
+            <text x="440" y="130" text-anchor="middle" font-size="11" fill="var(--muted)">only look a few steps ahead · keep all the hands together</text>
+            <line x1="440" y1="142" x2="440" y2="162" stroke="currentColor" stroke-width="1.5" marker-end="url(#a3)"/>
+
+            <text x="440" y="180" text-anchor="middle" font-size="11.5" letter-spacing="0.08em" fill="var(--felt)" font-family="JetBrains Mono, monospace">ONE PRACTICE ROUND  ·  DO IT 600 TIMES</text>
+
+            <rect x="20" y="192" width="196" height="72" rx="9" fill="var(--surface)" stroke="var(--line)"/>
+            <text x="118" y="222" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">Go through the map</text>
+            <text x="118" y="240" text-anchor="middle" font-size="11" fill="var(--muted)">carry the hands along</text>
+
+            <rect x="236" y="192" width="196" height="72" rx="9" fill="var(--felt-soft)" stroke="var(--felt-line)" stroke-width="1.5"/>
+            <text x="334" y="216" text-anchor="middle" font-size="13" font-weight="700" fill="var(--felt)">Ask the helper</text>
+            <text x="334" y="234" text-anchor="middle" font-size="11" fill="var(--muted)">at the far end →</text>
+            <text x="334" y="250" text-anchor="middle" font-size="11" fill="var(--muted)">a good guess</text>
+
+            <rect x="452" y="192" width="196" height="72" rx="9" fill="var(--surface)" stroke="var(--clay-line)"/>
+            <text x="550" y="212" text-anchor="middle" font-size="13" font-weight="600" fill="var(--clay)">A fair rule</text>
+            <text x="550" y="230" text-anchor="middle" font-size="10.5" fill="var(--muted)">they can quit early...</text>
+            <text x="550" y="245" text-anchor="middle" font-size="10.5" fill="var(--muted)">...so it can't be tricked</text>
+
+            <rect x="668" y="192" width="192" height="72" rx="9" fill="var(--surface)" stroke="var(--line)"/>
+            <text x="764" y="222" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">Learn</text>
+            <text x="764" y="240" text-anchor="middle" font-size="11" fill="var(--muted)">pick better moves</text>
+
+            <line x1="216" y1="228" x2="234" y2="228" stroke="currentColor" stroke-width="1.4" marker-end="url(#a3)"/>
+            <line x1="432" y1="228" x2="450" y2="228" stroke="currentColor" stroke-width="1.4" marker-end="url(#a3)"/>
+            <line x1="648" y1="228" x2="666" y2="228" stroke="currentColor" stroke-width="1.4" marker-end="url(#a3)"/>
+
+            <polyline points="764,264 764,290 118,290 118,266" fill="none" stroke="var(--felt)" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#a3f)"/>
+            <rect x="392" y="280" width="96" height="20" rx="10" fill="var(--bg)"/>
+            <text x="440" y="294" text-anchor="middle" font-size="10.5" fill="var(--felt)">go again</text>
+
+            <line x1="440" y1="300" x2="440" y2="326" stroke="currentColor" stroke-width="1.5" marker-end="url(#a3)"/>
+
+            <rect x="150" y="328" width="580" height="88" rx="11" fill="var(--surface)" stroke="var(--felt-line)" stroke-width="1.5"/>
+            <text x="300" y="360" text-anchor="middle" font-size="14" font-weight="700" fill="var(--felt)">The plan</text>
+            <text x="300" y="380" text-anchor="middle" font-size="11.5" fill="var(--muted)">for each hand: check, bet, or raise —</text>
+            <text x="300" y="396" text-anchor="middle" font-size="11.5" fill="var(--muted)">and how often to do each</text>
+
+            <g>
+              <rect x="556" y="344" width="132" height="56" rx="4" fill="none" stroke="var(--line)"/>
+              <rect x="560" y="348" width="20" height="12" fill="var(--felt-soft)"/><rect x="582" y="348" width="20" height="12" fill="var(--felt-soft)"/><rect x="604" y="348" width="20" height="12" fill="var(--felt-soft)"/><rect x="626" y="348" width="20" height="12" fill="var(--clay-soft)"/><rect x="648" y="348" width="20" height="12" fill="var(--clay-soft)"/><rect x="670" y="348" width="14" height="12" fill="var(--clay)"/>
+              <rect x="560" y="362" width="20" height="12" fill="var(--felt-soft)"/><rect x="582" y="362" width="20" height="12" fill="var(--felt-soft)"/><rect x="604" y="362" width="20" height="12" fill="var(--felt-soft)"/><rect x="626" y="362" width="20" height="12" fill="var(--felt-soft)"/><rect x="648" y="362" width="20" height="12" fill="var(--clay-soft)"/><rect x="670" y="362" width="14" height="12" fill="var(--clay-soft)"/>
+              <rect x="560" y="376" width="20" height="12" fill="var(--felt)"/><rect x="582" y="376" width="20" height="12" fill="var(--felt-soft)"/><rect x="604" y="376" width="20" height="12" fill="var(--felt-soft)"/><rect x="626" y="376" width="20" height="12" fill="var(--felt-soft)"/><rect x="648" y="376" width="20" height="12" fill="var(--felt-soft)"/><rect x="670" y="376" width="14" height="12" fill="var(--clay-soft)"/>
+              <rect x="560" y="390" width="20" height="8" fill="var(--felt)"/><rect x="582" y="390" width="20" height="8" fill="var(--felt)"/><rect x="604" y="390" width="20" height="8" fill="var(--felt-soft)"/><rect x="626" y="390" width="20" height="8" fill="var(--felt-soft)"/><rect x="648" y="390" width="20" height="8" fill="var(--felt-soft)"/><rect x="670" y="390" width="14" height="8" fill="var(--felt-soft)"/>
+              <text x="622" y="412" text-anchor="middle" font-size="9.5" fill="var(--faint)">the answer chart</text>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <figcaption>This happens on <b>every single turn</b> — the bot never saves a plan for later. It only looks ahead a few steps; past that, the <b>helper</b> answers instead of the real game. The <b>fair rule</b> lets the other player back out for what they'd have gotten anyway, which is what stops the bot from being fooled. After 600 rounds of practice, the plan it lands on is the colored chart you see in the app.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ============ ENGINE ============ -->
+  <div class="engine">
+    <span class="k">Why it works on a normal computer</span>
+    <p>Because every spot keeps all the hands <b>together in one bundle</b>, a round of practice is just one big pile of math done all at once — not one hand at a time. That kind of math runs on almost any computer: a fast graphics card if you have one, or a plain setting if you don't. The run in the picture took <b>95.9 seconds on a MacBook Air</b>.</p>
+  </div>
+
+  <hr class="rule">
+  <footer>study once · work out each move as it comes · no giant computer needed</footer>
+
+</div>

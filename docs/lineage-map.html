@@ -1,0 +1,386 @@
+<title>The Fork at Depth-Limited Solving</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,600;0,700;1,500&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --bg:#F3F5EF; --surface:#FBFCF9; --sunk:#EEF1EA;
+    --ink:#17211B; --muted:#586458; --faint:#8A968C; --line:#D6DCD1;
+    --felt:#1C6B47; --felt-soft:#E3EEE7; --felt-line:#B9D6C6;
+    --clay:#A8492B; --clay-soft:#F0E3DC; --clay-line:#E0C3B5;
+    --chip:#976e18;
+    --serif:"Spectral",Georgia,serif;
+    --sans:"Public Sans",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --bg:#0E130F; --surface:#151B16; --sunk:#10160F;
+      --ink:#E7ECE4; --muted:#9DA99E; --faint:#6E7A70; --line:#27302A;
+      --felt:#4CA97D; --felt-soft:#16271E; --felt-line:#265138;
+      --clay:#DA7E5B; --clay-soft:#2A1C17; --clay-line:#4A3025;
+      --chip:#D6AB56;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0E130F; --surface:#151B16; --sunk:#10160F;
+    --ink:#E7ECE4; --muted:#9DA99E; --faint:#6E7A70; --line:#27302A;
+    --felt:#4CA97D; --felt-soft:#16271E; --felt-line:#265138;
+    --clay:#DA7E5B; --clay-soft:#2A1C17; --clay-line:#4A3025;
+    --chip:#D6AB56;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:var(--sans); line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    margin:0; padding:32px 20px 56px;
+  }
+  .page{max-width:900px; margin:0 auto; display:flex; flex-direction:column; gap:30px}
+
+  /* ---- header ---- */
+  header{display:flex; flex-direction:column; gap:14px}
+  .eyebrow{
+    font-family:var(--mono); font-size:.72rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--felt); margin:0;
+  }
+  h1{
+    font-family:var(--serif); font-weight:700; font-size:clamp(2rem,5.4vw,3rem);
+    line-height:1.04; letter-spacing:-.01em; text-wrap:balance; margin:0;
+  }
+  h1 em{font-style:italic; font-weight:500; color:var(--felt)}
+  .thesis{
+    font-family:var(--serif); font-size:clamp(1.02rem,2.3vw,1.22rem);
+    color:var(--muted); max-width:64ch; margin:0; text-wrap:pretty;
+  }
+  .thesis b{color:var(--ink); font-weight:600}
+  .telemetry{
+    display:flex; flex-wrap:wrap; gap:8px; margin-top:2px;
+    font-family:var(--mono); font-size:.74rem;
+  }
+  .telemetry span{
+    background:var(--sunk); border:1px solid var(--line); border-radius:999px;
+    padding:4px 11px; color:var(--muted);
+  }
+  .telemetry span b{color:var(--chip); font-weight:500}
+
+  .rule{height:1px; background:var(--line); border:0; margin:0}
+
+  h2.section{
+    font-family:var(--mono); font-size:.74rem; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--faint); margin:0 0 16px;
+    display:flex; align-items:center; gap:10px;
+  }
+  h2.section::after{content:""; flex:1; height:1px; background:var(--line)}
+
+  /* ---- fork diagram ---- */
+  figure{margin:0}
+  .diagram{
+    background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:22px 20px 14px;
+  }
+  .diagram svg{display:block; width:100%; height:auto}
+  figcaption{
+    font-size:.82rem; color:var(--muted); margin-top:12px; text-align:center;
+    font-style:italic; font-family:var(--serif);
+  }
+  .lane-tag{font-family:var(--mono); font-weight:500}
+
+  /* ---- walls table ---- */
+  .walls{display:flex; flex-direction:column; gap:10px}
+  .wall{
+    display:grid; grid-template-columns:38px 1.35fr 1fr 1.35fr; gap:16px;
+    align-items:start; background:var(--surface);
+    border:1px solid var(--line); border-left:3px solid var(--clay);
+    border-radius:10px; padding:13px 16px;
+  }
+  .wall .n{
+    font-family:var(--mono); font-size:.9rem; color:var(--clay);
+    font-weight:500; padding-top:1px;
+  }
+  .wall .col-h{
+    font-family:var(--mono); font-size:.6rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint); display:block; margin-bottom:3px;
+  }
+  .wall .hit{font-weight:600; font-size:.92rem}
+  .wall .paper{font-size:.86rem; color:var(--muted)}
+  .wall .paper b{color:var(--ink); font-weight:600; font-family:var(--serif)}
+  .wall .fix{font-size:.88rem}
+  .wall .fix::before{
+    content:"→ "; color:var(--felt); font-weight:700;
+  }
+  .wall .fix{color:var(--ink)}
+  .walls-head{
+    display:grid; grid-template-columns:38px 1.35fr 1fr 1.35fr; gap:16px;
+    padding:0 16px; font-family:var(--mono); font-size:.6rem;
+    letter-spacing:.1em; text-transform:uppercase; color:var(--faint);
+  }
+  @media(max-width:660px){
+    .walls-head{display:none}
+    .wall{grid-template-columns:30px 1fr; gap:4px 12px; row-gap:8px}
+    .wall .n{grid-row:1/4}
+    .wall .col-h{margin-top:6px}
+  }
+
+  /* ---- pillars strip ---- */
+  .pillars{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+  }
+  .pillar{
+    background:var(--surface); border:1px solid var(--line); border-radius:11px;
+    padding:15px 16px; display:flex; flex-direction:column; gap:7px;
+  }
+  .pillar .k{
+    font-family:var(--mono); font-size:.66rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint);
+  }
+  .pillar .name{font-family:var(--serif); font-weight:600; font-size:1.02rem}
+  .pillar .verdict{font-size:.85rem; color:var(--muted)}
+  .pillar .verdict b{color:var(--ink); font-weight:600}
+  .pillar.kept{border-top:3px solid var(--felt)}
+  .pillar.gone{border-top:3px solid var(--clay)}
+  .pillar .tag{
+    font-family:var(--mono); font-size:.66rem; margin-top:auto; padding-top:4px;
+  }
+  .pillar.kept .tag{color:var(--felt)}
+  .pillar.gone .tag{color:var(--clay)}
+  @media(max-width:660px){.pillars{grid-template-columns:1fr}}
+
+  /* ---- papers ---- */
+  .papers{display:grid; grid-template-columns:repeat(2,1fr); gap:14px}
+  .paper-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:11px;
+    padding:15px 17px; display:flex; flex-direction:column; gap:6px;
+  }
+  .paper-card .id{
+    font-family:var(--mono); font-size:.68rem; color:var(--felt);
+    letter-spacing:.04em;
+  }
+  .paper-card .t{font-family:var(--serif); font-weight:600; font-size:1.02rem; line-height:1.2}
+  .paper-card .who{font-size:.78rem; color:var(--faint); font-family:var(--mono)}
+  .paper-card .d{font-size:.87rem; color:var(--muted); margin-top:2px}
+  @media(max-width:660px){.papers{grid-template-columns:1fr}}
+
+  footer{
+    font-size:.8rem; color:var(--faint); text-align:center;
+    font-family:var(--mono); letter-spacing:.03em;
+  }
+  a{color:var(--felt)}
+</style>
+
+<div class="page">
+
+  <header>
+    <p class="eyebrow">Felt · solver lineage</p>
+    <h1>The fork at <em>depth-limited solving</em></h1>
+    <p class="thesis">Four papers, one six-video series, and one engine — <b>Felt</b>. The series walks the <b>blueprint road</b> honestly and stalls at the hardest pillar. Felt took the <b>DeepStack fork</b> at that exact junction — and shipped.</p>
+    <div class="telemetry">
+      <span>board <b>Kd 7c 2s</b></span>
+      <span>pot <b>6.5bb</b> · 200bb eff</span>
+      <span>engine <b>CFR-D ATen fp32</b></span>
+      <span>solve <b>95.90 s</b></span>
+      <span><b>600</b> trunk iters</span>
+      <span><b>3138</b> trunk nodes</span>
+      <span>M4 MacBook Air</span>
+    </div>
+  </header>
+
+  <hr class="rule">
+
+  <!-- ============ FORK DIAGRAM ============ -->
+  <figure>
+    <h2 class="section">Where the two roads split</h2>
+    <div class="diagram">
+      <svg viewBox="0 0 880 520" role="img" aria-label="A shared CFR foundation flows down to a single fork — depth-limited solving, where the leaf value comes from. The left lane, the blueprint road, abstracts the game and solves subgames from blueprint EVs, then stalls. The right lane, the DeepStack fork, uses a value network at the leaf and continual re-solving, and ships in 95.9 seconds on an M4 Air.">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+          </marker>
+          <marker id="ahf" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--felt)"/>
+          </marker>
+          <marker id="ahc" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="var(--clay)"/>
+          </marker>
+        </defs>
+
+        <!-- shared spine -->
+        <g font-family="Public Sans, sans-serif" color="var(--ink)">
+          <rect x="300" y="8" width="280" height="46" rx="9" fill="var(--sunk)" stroke="var(--line)"/>
+          <text x="440" y="28" text-anchor="middle" font-size="14" font-weight="600" fill="var(--ink)">CFR · self-play regret → Nash</text>
+          <text x="440" y="45" text-anchor="middle" font-size="11.5" fill="var(--muted)" font-family="JetBrains Mono, monospace">Zinkevich 2007</text>
+          <line x1="440" y1="54" x2="440" y2="78" stroke="currentColor" stroke-width="1.5" marker-end="url(#ah)"/>
+
+          <rect x="292" y="80" width="296" height="42" rx="9" fill="var(--sunk)" stroke="var(--line)"/>
+          <text x="440" y="100" text-anchor="middle" font-size="13.5" font-weight="600" fill="var(--ink)">CFR+ / DCFR — full-width solve</text>
+          <text x="440" y="115" text-anchor="middle" font-size="11" fill="var(--muted)">clean, low-variance values</text>
+          <line x1="440" y1="122" x2="440" y2="146" stroke="currentColor" stroke-width="1.5" marker-end="url(#ah)"/>
+        </g>
+
+        <!-- fork node -->
+        <g font-family="Public Sans, sans-serif">
+          <rect x="252" y="148" width="376" height="52" rx="10" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+          <text x="440" y="170" text-anchor="middle" font-size="14.5" font-weight="700" fill="var(--ink)">DEPTH-LIMITED SOLVING</text>
+          <text x="440" y="189" text-anchor="middle" font-size="12.5" fill="var(--muted)" font-style="italic" font-family="Spectral, serif">what supplies the value at the leaf?</text>
+        </g>
+
+        <!-- split arrows with labels -->
+        <path d="M330,200 C300,224 236,224 220,244" fill="none" stroke="var(--clay)" stroke-width="1.6" marker-end="url(#ahc)"/>
+        <path d="M550,200 C580,224 644,224 660,244" fill="none" stroke="var(--felt)" stroke-width="1.6" marker-end="url(#ahf)"/>
+        <text x="250" y="224" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="var(--clay)">stored blueprint table</text>
+        <text x="630" y="224" text-anchor="middle" font-size="10.5" font-family="JetBrains Mono, monospace" fill="var(--felt)">learned range→value fn</text>
+
+        <!-- LEFT LANE: blueprint road (stalls) -->
+        <g font-family="Public Sans, sans-serif">
+          <text x="220" y="258" text-anchor="middle" font-size="11" font-family="JetBrains Mono, monospace" fill="var(--clay)" letter-spacing="0.08em">BLUEPRINT ROAD · Libratus</text>
+
+          <rect x="60" y="270" width="320" height="46" rx="9" fill="var(--clay-soft)" stroke="var(--clay-line)"/>
+          <text x="220" y="290" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">Abstract the game into buckets</text>
+          <text x="220" y="307" text-anchor="middle" font-size="11" fill="var(--muted)">~13 hand groups @ 30k infosets → nonsense</text>
+          <line x1="220" y1="316" x2="220" y2="336" stroke="var(--clay)" stroke-width="1.5" marker-end="url(#ahc)"/>
+
+          <rect x="60" y="338" width="320" height="46" rx="9" fill="var(--clay-soft)" stroke="var(--clay-line)"/>
+          <text x="220" y="358" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">Subgame-solve from blueprint EVs</text>
+          <text x="220" y="375" text-anchor="middle" font-size="11" fill="var(--muted)">safe vs unsafe re-solving unresolved</text>
+          <line x1="220" y1="384" x2="220" y2="406" stroke="var(--clay)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#ahc)"/>
+
+          <rect x="96" y="408" width="248" height="44" rx="9" fill="none" stroke="var(--clay)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="220" y="428" text-anchor="middle" font-size="13.5" font-weight="700" fill="var(--clay)">◺  SERIES STALLS HERE</text>
+          <text x="220" y="444" text-anchor="middle" font-size="10.5" fill="var(--muted)" font-family="JetBrains Mono, monospace">v6 · "a couple months away"</text>
+        </g>
+
+        <!-- RIGHT LANE: DeepStack fork (ships) -->
+        <g font-family="Public Sans, sans-serif">
+          <text x="660" y="258" text-anchor="middle" font-size="11" font-family="JetBrains Mono, monospace" fill="var(--felt)" letter-spacing="0.08em">DEEPSTACK FORK · FELT</text>
+
+          <rect x="500" y="270" width="320" height="46" rx="9" fill="var(--felt-soft)" stroke="var(--felt-line)"/>
+          <text x="660" y="290" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">Value network at the leaf</text>
+          <text x="660" y="307" text-anchor="middle" font-size="11" fill="var(--muted)">river→turn · EV × matchup (DEVN)</text>
+          <line x1="660" y1="316" x2="660" y2="336" stroke="var(--felt)" stroke-width="1.5" marker-end="url(#ahf)"/>
+
+          <rect x="500" y="338" width="320" height="46" rx="9" fill="var(--felt-soft)" stroke="var(--felt-line)"/>
+          <text x="660" y="358" text-anchor="middle" font-size="13" font-weight="600" fill="var(--ink)">Continual re-solving + CFR-D gadget</text>
+          <text x="660" y="375" text-anchor="middle" font-size="11" fill="var(--muted)">safety by construction · no blueprint</text>
+          <line x1="660" y1="384" x2="660" y2="406" stroke="var(--felt)" stroke-width="2" marker-end="url(#ahf)"/>
+
+          <rect x="536" y="408" width="248" height="44" rx="9" fill="var(--felt)"/>
+          <text x="660" y="428" text-anchor="middle" font-size="13.5" font-weight="700" fill="#fff">✓  FELT SHIPS</text>
+          <text x="660" y="444" text-anchor="middle" font-size="10.5" fill="#dff0e6" font-family="JetBrains Mono, monospace">95.9 s · M4 Air · ATen fp32</text>
+        </g>
+
+        <!-- board reminder bottom -->
+        <line x1="220" y1="470" x2="220" y2="486" stroke="var(--faint)" stroke-width="1" stroke-dasharray="2 4"/>
+        <line x1="660" y1="470" x2="660" y2="486" stroke="var(--faint)" stroke-width="1" stroke-dasharray="2 4"/>
+        <text x="440" y="502" text-anchor="middle" font-size="11" fill="var(--faint)" font-family="JetBrains Mono, monospace">same game · same CFR core · the leaf oracle is the whole difference</text>
+      </svg>
+    </div>
+    <figcaption>Both roads share the CFR core and stop at the same fork. The <span class="lane-tag" style="color:var(--clay)">left</span> reads leaf values from a stored blueprint table; the <span class="lane-tag" style="color:var(--felt)">right</span> asks a learned network that takes the ranges as input. That single choice is what separates a stall from a shipped solver.</figcaption>
+  </figure>
+
+  <!-- ============ WALLS ============ -->
+  <section>
+    <h2 class="section">Every wall the series hits is a blueprint-road wall</h2>
+    <div class="walls-head">
+      <span>vid</span><span>The wall</span><span>Named by</span><span>What the fork removes</span>
+    </div>
+    <div class="walls">
+      <div class="wall">
+        <span class="n">1</span>
+        <div><span class="col-h">the wall</span><span class="hit">Bucketing kills blockers</span></div>
+        <div class="paper"><span class="col-h">named by</span><b>DeepStack</b> motivation</div>
+        <div class="fix"><span class="col-h">the fork</span>buckets feed the net's input only — play stays unabstracted, blockers survive</div>
+      </div>
+      <div class="wall">
+        <span class="n">2</span>
+        <div><span class="col-h">the wall</span><span class="hit">Potential-aware abstraction too slow</span></div>
+        <div class="paper"><span class="col-h">named by</span><b>Ganzfried–Sandholm</b> 2014 (EMD, nested streets)</div>
+        <div class="fix"><span class="col-h">the fork</span>the network replaces the blueprint table entirely</div>
+      </div>
+      <div class="wall">
+        <span class="n">3</span>
+        <div><span class="col-h">the wall</span><span class="hit">MCCFR sampling injects variance</span></div>
+        <div class="paper"><span class="col-h">named by</span><b>Lanctot</b> / Zinkevich</div>
+        <div class="fix"><span class="col-h">the fork</span>full CFR+/DCFR → clean value targets to regress on</div>
+      </div>
+      <div class="wall">
+        <span class="n">4</span>
+        <div><span class="col-h">the wall</span><span class="hit">Equilibrium continuum · "reuse a node's utility as a leaf"</span></div>
+        <div class="paper"><span class="col-h">named by</span><b>CFR-D</b> + <b>DeepStack</b></div>
+        <div class="fix"><span class="col-h">the fork</span>the re-solve gadget + a range-conditioned value net</div>
+      </div>
+      <div class="wall">
+        <span class="n">5</span>
+        <div><span class="col-h">the wall</span><span class="hit">Public-tree engine · safe vs unsafe subgames</span></div>
+        <div class="paper"><span class="col-h">named by</span><b>CFR-D</b> gadget</div>
+        <div class="fix"><span class="col-h">the fork</span>same range-vector-per-node layout — now on LibTorch tensors</div>
+      </div>
+      <div class="wall">
+        <span class="n">6</span>
+        <div><span class="col-h">the wall</span><span class="hit">13 hand buckets @ 30k infosets = garbage strategy</span></div>
+        <div class="paper"><span class="col-h">named by</span><b>DeepStack</b> (Noam Brown's diminishing-returns slide)</div>
+        <div class="fix"><span class="col-h">the fork</span>don't abstract the strategy at all — solve the real state</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PILLARS ============ -->
+  <section>
+    <h2 class="section">The fork collapses three pillars into one learned object</h2>
+    <div class="pillars">
+      <div class="pillar kept">
+        <span class="k">Pillar 1</span>
+        <span class="name">CFR</span>
+        <span class="verdict"><b>Kept.</b> Full-width CFR+ / DCFR, for low-noise targets.</span>
+        <span class="tag">✓ carried over</span>
+      </div>
+      <div class="pillar gone">
+        <span class="k">Pillar 2</span>
+        <span class="name">Abstraction</span>
+        <span class="verdict"><b>Replaced.</b> The 13-bucket wall is gone; buckets only encode the net's input.</span>
+        <span class="tag">→ value network</span>
+      </div>
+      <div class="pillar gone">
+        <span class="k">Pillar 3</span>
+        <span class="name">Subgame solving</span>
+        <span class="verdict"><b>Replaced.</b> The pillar the series never shipped.</span>
+        <span class="tag">→ continual re-solving + gadget</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PAPERS ============ -->
+  <section>
+    <h2 class="section">The four papers, and the job each one does</h2>
+    <div class="papers">
+      <div class="paper-card">
+        <span class="id">NIPS 2007</span>
+        <span class="t">Regret Minimization in Games with Incomplete Information</span>
+        <span class="who">Zinkevich, Johanson, Bowling, Piccione</span>
+        <span class="d">The engine. Counterfactual regret; self-play minimization converges to Nash. Everything else sits on this.</span>
+      </div>
+      <div class="paper-card">
+        <span class="id">arXiv:1303.4441 · 2014</span>
+        <span class="t">Solving Imperfect Information Games Using Decomposition</span>
+        <span class="who">Burch, Johanson, Bowling</span>
+        <span class="d">The safety guarantee. Trunk / subgame split, and the T/F re-solve gadget that makes decomposition safe via opponent counterfactual values.</span>
+      </div>
+      <div class="paper-card">
+        <span class="id">Science 2017</span>
+        <span class="t">DeepStack: Expert-Level AI in Heads-Up No-Limit Poker</span>
+        <span class="who">Moravčík, Schmid, Burch, et al.</span>
+        <span class="d">The fork itself. Continual re-solving + depth-limited lookahead with a deep counterfactual value network at the leaves — no explicit abstraction.</span>
+      </div>
+      <div class="paper-card">
+        <span class="id">AAAI 2023 · Deepsolver</span>
+        <span class="t">Don't Predict Counterfactual Values, Predict Expected Values Instead</span>
+        <span class="who">Wołosiuk, Świechowski, Mańdziuk</span>
+        <span class="d">The sharpening. Predict the smooth EV and multiply by the exact matchup — smaller, faster nets, ~30% lower encoding-error floor.</span>
+      </div>
+    </div>
+  </section>
+
+  <hr class="rule">
+  <footer>CFR → CFR-D → DeepStack → DEVN &nbsp;·&nbsp; blueprint road maps it, the DeepStack fork ships it</footer>
+
+</div>

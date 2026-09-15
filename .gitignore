@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.env
+
+# Solver artifacts / trained models (regenerate; don't commit)
+*.pt
+*.pth
+*.onnx
+*.ckpt
+data/
+checkpoints/
+
+# C++/LibTorch build outputs (for the performance engine)
+/cmake-build-*/
+/out/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.dylib
+libtorch/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
