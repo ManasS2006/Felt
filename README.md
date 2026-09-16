@@ -64,11 +64,15 @@ confirms both CFR+ convergence and the exact best-response code.
 
 Same command (`python bench.py`), one row per machine — fill in as you run it:
 
-| Machine | CPU | Leduc 1000 iters | node-visits/s |
-|---------|-----|------------------|---------------|
-| Laptop  | Snapdragon ARM64 (Windows) | 36.4 s | ~519k |
-| Desktop | _(run it)_ | _–_ | _–_ |
-| M4 Air  | _(run it)_ | _–_ | _–_ |
+| Machine   | CPU                   | Python | Kuhn 20k | Leduc 1k | Leduc nodes/s |
+|-----------|-----------------------|--------|----------|----------|---------------|
+| Surface 7 | Snapdragon X (ARM64)  | 3.13   | 3.67 s   | 75.4 s   | ~251k         |
+| Desktop   | _(run it — x86 + GPU)_ |        | _–_      | _–_      | _–_           |
+| M4 Air    | _(run it)_            |        | _–_      | _–_      | _–_           |
+
+Times vary with power/thermal state on laptops — run plugged in for a fair
+comparison. (The GPU column will come from the C++/LibTorch engine, not this
+CPU-only reference solver.)
 
 The pure-Python reference is deliberately simple, not fast — its job is to be
 *correct and portable*. Speed is the C++/LibTorch engine's job.
